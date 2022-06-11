@@ -202,32 +202,31 @@ void usage(FILE* stream)
 
 int main(int argc, const char** argv)
 {
-    scc(SDL_Init(SDL_INIT_EVERYTHING));
-
-    if (argc < 2)
-    {
-        usage(stderr);
-        fprintf(stderr, "ERROR: No argument was provided\n");
-        exit(1);
-    }
-
-    Context context = {0};
-    context_init_sdl(&context);
+    float displayed_time = 0.0f;
+    Mode mode = MODE_ASCENDING;
 
     for (size_t i = 1; i < (size_t) argc; ++i)
     {
         if (strcmp(argv[i], "clock") == 0) {
-            context.mode = MODE_CLOCK;
+            mode = MODE_CLOCK;
             break;
         } else if (strcmp(argv[i], "help") == 0) {
             usage(stdout);
             exit(0);
         } else {
-            context.mode = MODE_COUNTDOWN;
-            context.displayed_time = parse_time(argv[i]);
+            mode = MODE_COUNTDOWN;
+            displayed_time = parse_time(argv[i]);
             break;
         }
     }
+
+    scc(SDL_Init(SDL_INIT_EVERYTHING));
+
+    Context context = {0};
+    context_init_sdl(&context);
+
+    context.displayed_time = displayed_time;
+    context.mode = mode;
 
     while (!context.quit)
     {
