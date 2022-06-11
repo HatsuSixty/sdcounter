@@ -59,7 +59,7 @@ typedef struct {
 #define BACKGROUND_COLOR_R  24
 #define BACKGROUND_COLOR_G  24
 #define BACKGROUND_COLOR_B  24
-#define PBACKGROUND_COLOR_R 30
+#define PBACKGROUND_COLOR_R 40
 #define PBACKGROUND_COLOR_G 24
 #define PBACKGROUND_COLOR_B 24
 #define WIDTH               800
