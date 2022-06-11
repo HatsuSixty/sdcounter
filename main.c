@@ -41,10 +41,11 @@ typedef struct {
     int char_x;
     int char_y;
     int sprite;
-    float displayed_time;
     bool quit;
     bool paused;
     Mode mode;
+    float displayed_time;
+    float sprite_cooldown;
 } Context;
 
 #define COLON_INDEX         10
@@ -56,6 +57,9 @@ typedef struct {
 #define BACKGROUND_COLOR_R  24
 #define BACKGROUND_COLOR_G  24
 #define BACKGROUND_COLOR_B  24
+#define PBACKGROUND_COLOR_R 30
+#define PBACKGROUND_COLOR_G 24
+#define PBACKGROUND_COLOR_B 24
 #define WIDTH               800
 #define HEIGHT              600
 #define SPRITE_CHAR_WIDTH  (300 / 2)
@@ -150,7 +154,7 @@ int main(void)
                            BACKGROUND_COLOR_B,
                            255);
 
-    float sprite_cooldown = SPRITE_DURATION;
+    context.sprite_cooldown = SPRITE_DURATION;
     while (!context.quit)
     {
         SDL_Event event = {0};
@@ -163,6 +167,9 @@ int main(void)
                 break;
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.sym) {
+                case SDLK_SPACE:
+                    context.paused = !context.paused;
+                    break;
                 case SDLK_F11: {
                     Uint32 window_flags;
                     scc(window_flags = SDL_GetWindowFlags(context.window));
@@ -200,13 +207,19 @@ int main(void)
         }
         SDL_RenderPresent(context.renderer);
 
-        if (sprite_cooldown <= 0.0f) {
+        if (context.sprite_cooldown <= 0.0f) {
             context.sprite++;
-            sprite_cooldown = SPRITE_DURATION;
+            context.sprite_cooldown = SPRITE_DURATION;
         }
-        sprite_cooldown -= DELTA_TIME;
+        context.sprite_cooldown -= DELTA_TIME;
 
         if (!context.paused) {
+            SDL_SetRenderDrawColor(context.renderer,
+                                   BACKGROUND_COLOR_R,
+                                   BACKGROUND_COLOR_G,
+                                   BACKGROUND_COLOR_B,
+                                   255);
+
             switch (context.mode) {
             case MODE_ASCENDING: {
                 context.displayed_time += DELTA_TIME;
@@ -227,6 +240,12 @@ int main(void)
                 break;
             }
             }
+        } else {
+            SDL_SetRenderDrawColor(context.renderer,
+                                   PBACKGROUND_COLOR_R,
+                                   PBACKGROUND_COLOR_G,
+                                   PBACKGROUND_COLOR_B,
+                                   255);
         }
 
         SDL_Delay((int) floorf(DELTA_TIME * 1000.0f));
