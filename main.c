@@ -113,8 +113,7 @@ void context_init_sdl(Context* context)
     context->digits = load_png_file_as_texture(context);
     scc(SDL_SetTextureColorMod(context->digits, MAIN_COLOR_R, MAIN_COLOR_G, MAIN_COLOR_B));
 
-    context->char_x = 1;
-    context->char_y = 1;
+    context->sprite_cooldown = SPRITE_DURATION;
 }
 
 void context_render_char(Context* context, int number,
@@ -148,13 +147,6 @@ int main(void)
     Context context = {0};
     context_init_sdl(&context);
 
-    SDL_SetRenderDrawColor(context.renderer,
-                           BACKGROUND_COLOR_R,
-                           BACKGROUND_COLOR_G,
-                           BACKGROUND_COLOR_B,
-                           255);
-
-    context.sprite_cooldown = SPRITE_DURATION;
     while (!context.quit)
     {
         SDL_Event event = {0};
