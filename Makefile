@@ -7,6 +7,9 @@ count: main.o
 main.o: main.c image.h
 	$(CC) $(CFLAGS) -c main.c -o main.o $(LIBS)
 
+png2c.o: png2c.c
+	$(CC) $(CFLAGS) -c png2c.c -o png2c.o -lm
+
 png2c: png2c.o
 	$(CC) $(CFLAGS) -o png2c png2c.o -lm
 
