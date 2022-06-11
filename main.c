@@ -46,6 +46,8 @@ typedef struct {
     Mode mode;
     float displayed_time;
     float sprite_cooldown;
+    float fit_scale;
+    float user_scale;
 } Context;
 
 #define COLON_INDEX         10
@@ -69,8 +71,6 @@ typedef struct {
 #define CHARS_COUNT         8
 #define TEXT_WIDTH         (CHAR_WIDTH * CHARS_COUNT)
 #define TEXT_HEIGHT        (CHAR_HEIGHT)
-#define TEXT_SCALE          1
-#define TEXT_FIT_SCALE      1
 #define SPRITE_DURATION    (0.40f / SPRITE_COUNT)
 #define SPRITE_COUNT        3
 
@@ -114,6 +114,26 @@ void context_init_sdl(Context* context)
     scc(SDL_SetTextureColorMod(context->digits, MAIN_COLOR_R, MAIN_COLOR_G, MAIN_COLOR_B));
 
     context->sprite_cooldown = SPRITE_DURATION;
+    context->user_scale = 1;
+}
+
+void context_init_coordinates(Context* context)
+{
+    int w, h;
+    SDL_GetWindowSize(context->window, &w, &h);
+
+    float text_aspect_ratio = (float) TEXT_WIDTH / (float) TEXT_HEIGHT;
+    float window_aspect_ratio = (float) w / (float) h;
+    if(text_aspect_ratio > window_aspect_ratio) {
+        context->fit_scale = (float) w / (float) TEXT_WIDTH;
+    } else {
+        context->fit_scale = (float) h / (float) TEXT_HEIGHT;
+    }
+
+    const int effective_digit_width = (int) floorf((float) CHAR_WIDTH * context->user_scale * context->fit_scale);
+    const int effective_digit_height = (int) floorf((float) CHAR_HEIGHT * context->user_scale * context->fit_scale);
+    context->char_x = w / 2 - effective_digit_width * CHARS_COUNT / 2;
+    context->char_y = h / 2 - effective_digit_height / 2;
 }
 
 void context_render_char(Context* context, int number,
@@ -178,24 +198,24 @@ int main(void)
 
         SDL_RenderClear(context.renderer);
         {
-            context.char_x = 0;
-            context.char_y = 0;
+            context.fit_scale = 1.0f;
+            context_init_coordinates(&context);
 
             size_t t = (size_t) ceilf(fmaxf(context.displayed_time, 0.0f));
 
             const size_t hours = t / 60 / 60;
-            context_render_char(&context, hours / 10,  TEXT_SCALE, TEXT_FIT_SCALE);
-            context_render_char(&context, hours % 10,  TEXT_SCALE, TEXT_FIT_SCALE);
-            context_render_char(&context, COLON_INDEX, TEXT_SCALE, TEXT_FIT_SCALE);
+            context_render_char(&context, hours / 10,  context.user_scale, context.fit_scale);
+            context_render_char(&context, hours % 10,  context.user_scale, context.fit_scale);
+            context_render_char(&context, COLON_INDEX, context.user_scale, context.fit_scale);
 
             const size_t minutes = t / 60 % 60;
-            context_render_char(&context, minutes / 10, TEXT_SCALE, TEXT_FIT_SCALE);
-            context_render_char(&context, minutes % 10, TEXT_SCALE, TEXT_FIT_SCALE);
-            context_render_char(&context, COLON_INDEX,  TEXT_SCALE, TEXT_FIT_SCALE);
+            context_render_char(&context, minutes / 10, context.user_scale, context.fit_scale);
+            context_render_char(&context, minutes % 10, context.user_scale, context.fit_scale);
+            context_render_char(&context, COLON_INDEX,  context.user_scale, context.fit_scale);
 
             const size_t seconds = t % 60;
-            context_render_char(&context, seconds / 10, TEXT_SCALE, TEXT_FIT_SCALE);
-            context_render_char(&context, seconds % 10, TEXT_SCALE, TEXT_FIT_SCALE);
+            context_render_char(&context, seconds / 10, context.user_scale, context.fit_scale);
+            context_render_char(&context, seconds % 10, context.user_scale, context.fit_scale);
         }
         SDL_RenderPresent(context.renderer);
 
