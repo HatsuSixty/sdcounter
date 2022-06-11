@@ -160,12 +160,74 @@ void context_render_char(Context* context, int number,
     context->char_x += effective_digit_width;
 }
 
-int main(void)
+float parse_time(const char* time)
+{
+    float result = 0.0f;
+
+    while (*time) {
+        char* endptr = NULL;
+        float x = strtof(time, &endptr);
+
+        if (time == endptr) {
+            fprintf(stderr, "ERROR: `%s` is not a number\n", time);
+            exit(1);
+        }
+
+        switch (*endptr) {
+        case '\0':
+        case 's': result += x;                 break;
+        case 'm': result += x * 60.0f;         break;
+        case 'h': result += x * 60.0f * 60.0f; break;
+        default:
+            fprintf(stderr, "ERROR: `%c` is an unknown time unit\n", *endptr);
+            exit(1);
+        }
+
+        time = endptr;
+        if (*time) time += 1;
+    }
+
+    return result;
+}
+
+void usage(FILE* stream)
+{
+    fprintf(stream, "Usage: count [SUBCOMMAND] [TIME]\n");
+    fprintf(stream, "    Subcommands:\n");
+    fprintf(stream, "        clock    Change to clock mode\n");
+    fprintf(stream, "        help     Print this help and exit with exit code 0\n");
+    fprintf(stream, "\n");
+    fprintf(stream, "    Any other kind of subcommand will be interpreted as TIME\n");
+}
+
+int main(int argc, const char** argv)
 {
     scc(SDL_Init(SDL_INIT_EVERYTHING));
 
+    if (argc < 2)
+    {
+        usage(stderr);
+        fprintf(stderr, "ERROR: No argument was provided\n");
+        exit(1);
+    }
+
     Context context = {0};
     context_init_sdl(&context);
+
+    for (size_t i = 1; i < (size_t) argc; ++i)
+    {
+        if (strcmp(argv[i], "clock") == 0) {
+            context.mode = MODE_CLOCK;
+            break;
+        } else if (strcmp(argv[i], "help") == 0) {
+            usage(stdout);
+            exit(0);
+        } else {
+            context.mode = MODE_COUNTDOWN;
+            context.displayed_time = parse_time(argv[i]);
+            break;
+        }
+    }
 
     while (!context.quit)
     {

@@ -15,6 +15,3 @@ digits.png:
 
 image.h: png2c digits.png
 	./png2c digits.png > image.h
-
-run: count
-	./count
