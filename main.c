@@ -136,14 +136,12 @@ void context_init_coordinates(Context* context)
     context->char_y = h / 2 - effective_digit_height / 2;
 }
 
-void context_render_char(Context* context, int number,
-                         float user_scale, float fit_scale)
+void context_render_char(Context* context, int number)
 {
     if (context->sprite >= 3) context->sprite = 0;
 
-    const int effective_digit_width = (int) floorf((float) CHAR_WIDTH * user_scale * fit_scale);
-    const int effective_digit_height = (int) floorf((float) CHAR_HEIGHT * user_scale * fit_scale);
-
+    const int effective_digit_width = (int) floorf((float) CHAR_WIDTH * context->user_scale * context->fit_scale);
+    const int effective_digit_height = (int) floorf((float) CHAR_HEIGHT * context->user_scale * context->fit_scale);
     const SDL_Rect src = {
         (int) (number * SPRITE_CHAR_WIDTH),
         (int) (context->sprite * SPRITE_CHAR_HEIGHT),
@@ -268,18 +266,18 @@ int main(int argc, const char** argv)
             size_t t = (size_t) ceilf(fmaxf(context.displayed_time, 0.0f));
 
             const size_t hours = t / 60 / 60;
-            context_render_char(&context, hours / 10,  context.user_scale, context.fit_scale);
-            context_render_char(&context, hours % 10,  context.user_scale, context.fit_scale);
-            context_render_char(&context, COLON_INDEX, context.user_scale, context.fit_scale);
+            context_render_char(&context, hours / 10);
+            context_render_char(&context, hours % 10);
+            context_render_char(&context, COLON_INDEX);
 
             const size_t minutes = t / 60 % 60;
-            context_render_char(&context, minutes / 10, context.user_scale, context.fit_scale);
-            context_render_char(&context, minutes % 10, context.user_scale, context.fit_scale);
-            context_render_char(&context, COLON_INDEX,  context.user_scale, context.fit_scale);
+            context_render_char(&context, minutes / 10);
+            context_render_char(&context, minutes % 10);
+            context_render_char(&context, COLON_INDEX);
 
             const size_t seconds = t % 60;
-            context_render_char(&context, seconds / 10, context.user_scale, context.fit_scale);
-            context_render_char(&context, seconds % 10, context.user_scale, context.fit_scale);
+            context_render_char(&context, seconds / 10);
+            context_render_char(&context, seconds % 10);
         }
         SDL_RenderPresent(context.renderer);
 
