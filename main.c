@@ -8,18 +8,15 @@
 
 #include "image.h"
 
-void scc(int code)
-{
-    if (code < 0)
-    {
+void scc(int code) {
+    if (code < 0) {
         fprintf(stderr, "ERROR: SDL pooped itself: %s\n",
                 SDL_GetError());
         exit(1);
     }
 }
 
-void *sccp(void *ptr)
-{
+void* sccp(void* ptr) {
     if (ptr == NULL) {
         fprintf(stderr, "SDL pooped itself: %s\n", SDL_GetError());
         abort();
@@ -74,8 +71,7 @@ typedef struct {
 #define SPRITE_DURATION    (0.40f / SPRITE_COUNT)
 #define SPRITE_COUNT        3
 
-SDL_Surface* load_png_file_as_surface()
-{
+SDL_Surface* load_png_file_as_surface() {
     SDL_Surface* image_surface =
         sccp(SDL_CreateRGBSurfaceFrom(
                  png,
@@ -90,41 +86,35 @@ SDL_Surface* load_png_file_as_surface()
     return image_surface;
 }
 
-SDL_Texture* load_png_file_as_texture(Context* context)
-{
+SDL_Texture* load_png_file_as_texture(Context* context) {
     SDL_Surface* image_surface = load_png_file_as_surface();
     return sccp(SDL_CreateTextureFromSurface(context->renderer, image_surface));
 }
 
-void context_init_sdl(Context* context)
-{
+void context_init_sdl(Context* context) {
     scc(SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"));
     scc(SDL_SetHint(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0"));
-
     context->window = SDL_CreateWindow("Counter", 0, 0,
                                        WIDTH,
                                        HEIGHT,
                                        SDL_WINDOW_RESIZABLE);
     context->renderer = SDL_CreateRenderer(
-        context->window, -1,
-        SDL_RENDERER_PRESENTVSYNC
-        | SDL_RENDERER_ACCELERATED);
-
+                            context->window, -1,
+                            SDL_RENDERER_PRESENTVSYNC
+                            | SDL_RENDERER_ACCELERATED);
     context->digits = load_png_file_as_texture(context);
     scc(SDL_SetTextureColorMod(context->digits, MAIN_COLOR_R, MAIN_COLOR_G, MAIN_COLOR_B));
-
     context->sprite_cooldown = SPRITE_DURATION;
     context->user_scale = 1;
 }
 
-void context_init_coordinates(Context* context)
-{
+void context_init_coordinates(Context* context) {
     int w, h;
     SDL_GetWindowSize(context->window, &w, &h);
-
     float text_aspect_ratio = (float) TEXT_WIDTH / (float) TEXT_HEIGHT;
     float window_aspect_ratio = (float) w / (float) h;
-    if(text_aspect_ratio > window_aspect_ratio) {
+
+    if (text_aspect_ratio > window_aspect_ratio) {
         context->fit_scale = (float) w / (float) TEXT_WIDTH;
     } else {
         context->fit_scale = (float) h / (float) TEXT_HEIGHT;
@@ -136,8 +126,7 @@ void context_init_coordinates(Context* context)
     context->char_y = h / 2 - effective_digit_height / 2;
 }
 
-void context_render_char(Context* context, int number)
-{
+void context_render_char(Context* context, int number) {
     if (context->sprite >= 3) context->sprite = 0;
 
     const int effective_digit_width = (int) floorf((float) CHAR_WIDTH * context->user_scale * context->fit_scale);
@@ -158,8 +147,7 @@ void context_render_char(Context* context, int number)
     context->char_x += effective_digit_width;
 }
 
-float parse_time(const char* time)
-{
+float parse_time(const char* time) {
     float result = 0.0f;
 
     while (*time) {
@@ -173,23 +161,32 @@ float parse_time(const char* time)
 
         switch (*endptr) {
         case '\0':
-        case 's': result += x;                 break;
-        case 'm': result += x * 60.0f;         break;
-        case 'h': result += x * 60.0f * 60.0f; break;
+        case 's':
+            result += x;
+            break;
+
+        case 'm':
+            result += x * 60.0f;
+            break;
+
+        case 'h':
+            result += x * 60.0f * 60.0f;
+            break;
+
         default:
             fprintf(stderr, "ERROR: `%c` is an unknown time unit\n", *endptr);
             exit(1);
         }
 
         time = endptr;
+
         if (*time) time += 1;
     }
 
     return result;
 }
 
-void usage(FILE* stream)
-{
+void usage(FILE* stream) {
     fprintf(stream, "Usage: count [SUBCOMMAND] [TIME]\n");
     fprintf(stream, "    Subcommands:\n");
     fprintf(stream, "        clock    Change to clock mode\n");
@@ -199,14 +196,12 @@ void usage(FILE* stream)
     fprintf(stream, "    Any other kind of subcommand will be interpreted as TIME\n");
 }
 
-int main(int argc, const char** argv)
-{
+int main(int argc, const char** argv) {
     float displayed_time = 0.0f;
     bool paused = false;
     Mode mode = MODE_ASCENDING;
 
-    for (size_t i = 1; i < (size_t) argc; ++i)
-    {
+    for (size_t i = 1; i < (size_t) argc; ++i) {
         if (strcmp(argv[i], "clock") == 0) {
             mode = MODE_CLOCK;
         } else if (strcmp(argv[i], "help") == 0) {
@@ -221,40 +216,41 @@ int main(int argc, const char** argv)
     }
 
     scc(SDL_Init(SDL_INIT_EVERYTHING));
-
     Context context = {0};
     context_init_sdl(&context);
-
     context.displayed_time = displayed_time;
     context.mode = mode;
     context.paused = paused;
 
-    while (!context.quit)
-    {
+    while (!context.quit) {
         SDL_Event event = {0};
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
+
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
             case SDL_QUIT:
                 context.quit = true;
                 break;
+
             case SDL_KEYDOWN: {
                 switch (event.key.keysym.sym) {
                 case SDLK_SPACE:
                     context.paused = !context.paused;
                     break;
+
                 case SDLK_F11: {
                     Uint32 window_flags;
                     scc(window_flags = SDL_GetWindowFlags(context.window));
+
                     if (window_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
                         scc(SDL_SetWindowFullscreen(context.window, 0));
                     } else {
                         scc(SDL_SetWindowFullscreen(context.window, SDL_WINDOW_FULLSCREEN_DESKTOP));
                     }
-                } break;
                 }
-            } break;
+                break;
+                }
+            }
+            break;
             }
         }
 
@@ -262,19 +258,15 @@ int main(int argc, const char** argv)
         {
             context.fit_scale = 1.0f;
             context_init_coordinates(&context);
-
             size_t t = (size_t) ceilf(fmaxf(context.displayed_time, 0.0f));
-
             const size_t hours = t / 60 / 60;
             context_render_char(&context, hours / 10);
             context_render_char(&context, hours % 10);
             context_render_char(&context, COLON_INDEX);
-
             const size_t minutes = t / 60 % 60;
             context_render_char(&context, minutes / 10);
             context_render_char(&context, minutes % 10);
             context_render_char(&context, COLON_INDEX);
-
             const size_t seconds = t % 60;
             context_render_char(&context, seconds / 10);
             context_render_char(&context, seconds % 10);
@@ -285,6 +277,7 @@ int main(int argc, const char** argv)
             context.sprite++;
             context.sprite_cooldown = SPRITE_DURATION;
         }
+
         context.sprite_cooldown -= DELTA_TIME;
 
         if (!context.paused) {
@@ -297,20 +290,24 @@ int main(int argc, const char** argv)
             switch (context.mode) {
             case MODE_ASCENDING: {
                 context.displayed_time += DELTA_TIME;
-            } break;
+            }
+            break;
+
             case MODE_COUNTDOWN: {
                 if (context.displayed_time > 1e-6) {
                     context.displayed_time -= DELTA_TIME;
                 } else {
                     context.displayed_time = 0.0f;
                 }
-            } break;
+            }
+            break;
+
             case MODE_CLOCK: {
                 time_t t = time(NULL);
-                struct tm *tm = localtime(&t);
+                struct tm* tm = localtime(&t);
                 context.displayed_time = tm->tm_sec
-                               + tm->tm_min  * 60.0f
-                               + tm->tm_hour * 60.0f * 60.0f;
+                                         + tm->tm_min  * 60.0f
+                                         + tm->tm_hour * 60.0f * 60.0f;
                 break;
             }
             }
