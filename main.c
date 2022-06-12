@@ -196,6 +196,7 @@ void usage(FILE* stream)
     fprintf(stream, "    Subcommands:\n");
     fprintf(stream, "        clock    Change to clock mode\n");
     fprintf(stream, "        help     Print this help and exit with exit code 0\n");
+    fprintf(stream, "        pause    Start the counter paused\n");
     fprintf(stream, "\n");
     fprintf(stream, "    Any other kind of subcommand will be interpreted as TIME\n");
 }
@@ -203,20 +204,21 @@ void usage(FILE* stream)
 int main(int argc, const char** argv)
 {
     float displayed_time = 0.0f;
+    bool paused = false;
     Mode mode = MODE_ASCENDING;
 
     for (size_t i = 1; i < (size_t) argc; ++i)
     {
         if (strcmp(argv[i], "clock") == 0) {
             mode = MODE_CLOCK;
-            break;
         } else if (strcmp(argv[i], "help") == 0) {
             usage(stdout);
             exit(0);
+        } else if (strcmp(argv[i], "pause") == 0) {
+            paused = true;
         } else {
             mode = MODE_COUNTDOWN;
             displayed_time = parse_time(argv[i]);
-            break;
         }
     }
 
@@ -227,6 +229,7 @@ int main(int argc, const char** argv)
 
     context.displayed_time = displayed_time;
     context.mode = mode;
+    context.paused = paused;
 
     while (!context.quit)
     {
